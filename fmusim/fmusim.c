@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <windows.h>
 
 #ifdef _WIN32
 #include <Shlwapi.h>
@@ -210,6 +211,27 @@ TERMINATE:
 }
 
 int main(int argc, const char* argv[]) {
+    
+    // Set process affinity to run on CPU core 1
+    int coreID = 1; // Zero-based index, where 0 is the first CPU core
+    DWORD_PTR affinityMask = 1ULL << coreID; // Calculate mask for the desired core
+    if (!SetProcessAffinityMask(GetCurrentProcess(), affinityMask)) {
+        printf("Failed to set process affinity. Error: %lu\n", GetLastError());
+    }
+    else {
+        printf("Process affinity set to core %d.\n", coreID);
+    }
+
+    // Set process priority to REALTIME_PRIORITY_CLASS
+    if (!SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS)) {
+        printf("Failed to set process priority. Error: %lu\n", GetLastError());
+    }
+    else {
+        printf("Process priority set to REALTIME_PRIORITY_CLASS.\n");
+    }
+
+    DWORD processorNumber = GetCurrentProcessorNumber();
+    printf("Current thread is running on processor %lu\n", processorNumber);
 
     if (argc < 2) {
         printf("Missing argument [FMU].\n\n");

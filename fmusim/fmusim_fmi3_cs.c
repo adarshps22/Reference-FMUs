@@ -1,13 +1,34 @@
 #include <stdlib.h>
 #include <math.h>
+#include <windows.h>
+#include <psapi.h>
 
 #include "FMIUtil.h"
 
 #include "fmusim_fmi3_cs.h"
+#include "FMI3Clock.h"
 
 
 #define CALL(f) do { status = f; if (status > FMIOK) goto TERMINATE; } while (0)
 
+void printMemoryUsage() {
+    PROCESS_MEMORY_COUNTERS pmc;
+    if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
+        printf("Memory Usage: Current: %lu, Peak: %lu\n", pmc.WorkingSetSize, pmc.PeakWorkingSetSize);
+    }
+}
+
+LARGE_INTEGER getPerformanceCounter() {
+    LARGE_INTEGER li;
+    QueryPerformanceCounter(&li);
+    return li;
+}
+
+double getCounterDifferenceInSeconds(LARGE_INTEGER start, LARGE_INTEGER end) {
+    LARGE_INTEGER frequency;
+    QueryPerformanceFrequency(&frequency);
+    return (double)(end.QuadPart - start.QuadPart) / (double)frequency.QuadPart;
+}
 
 static void recordIntermediateValues(
     fmi3InstanceEnvironment instanceEnvironment,
@@ -30,6 +51,40 @@ static void recordIntermediateValues(
     *earlyReturnRequested = fmi3False;
 }
 
+size_t getClocksCount(FMIModelVariable* modelVariable, size_t variableCount) {
+    size_t count = 0;
+    for (int i = 0; i < variableCount; i++) {
+        if (modelVariable[i].type == FMIClockType) {
+            count++;
+        }
+    }
+    return count;
+}
+
+void extractClocksFromModelVariables(FMIModelVariable* modelVariable, size_t variableCount, ClockCollection* clockCollection){
+    size_t count = 0;
+    for (int i = 0; i < variableCount; i++) {
+        if (modelVariable[i].type == FMIClockType) {
+            if (modelVariable[i].clockProperties->supportsFraction == NULL) {
+                clockCollection->clocks[count].intervalDecimal = strtod(modelVariable[i].clockProperties->intervalDecimal, NULL);
+                clockCollection->clocks[count].shiftDecimal = strtod(modelVariable[i].clockProperties->shiftDecimal, NULL);
+                clockCollection->clocks[count].supportsFraction = false;
+            }
+            else {
+                clockCollection->clocks[count].supportsFraction = strcmp(modelVariable[i].clockProperties->supportsFraction, "true");
+                if (clockCollection->clocks[count].supportsFraction == true) {
+                    clockCollection->clocks[count].resolution = strtoul(modelVariable[i].clockProperties->resolution, NULL, 10);
+                    clockCollection->clocks[count].intervalCounter = strtoul(modelVariable[i].clockProperties->intervalCounter, NULL, 10);
+                    clockCollection->clocks[count].shiftCounter = strtoul(modelVariable[i].clockProperties->shiftCounter, NULL, 10);
+                }
+            }
+            clockCollection->clocks[count].name = modelVariable[i].name;
+            clockCollection->clocks[count].valueReference = modelVariable[i].valueReference;                
+            clockCollection->clocks[count].intervalVariability = modelVariable[i].clockProperties->intervalVariability;
+        }
+    }
+}
+
 FMIStatus simulateFMI3CS(FMIInstance* S,
     const FMIModelDescription * modelDescription,
     const char* resourcePath,
@@ -37,6 +92,8 @@ FMIStatus simulateFMI3CS(FMIInstance* S,
     const FMUStaticInput * input,
     const FMISimulationSettings * settings) {
 
+    LARGE_INTEGER startTime, endTime;
+    LARGE_INTEGER frequency;
     FMIStatus status = FMIOK;
 
     fmi3Boolean inputEvent = fmi3False;
@@ -58,6 +115,17 @@ FMIStatus simulateFMI3CS(FMIInstance* S,
     fmi3ValueReference* requiredIntermediateVariables = NULL;
     size_t nRequiredIntermediateVariables = 0;
     fmi3IntermediateUpdateCallback intermediateUpdate = NULL;
+
+    ClockCollection* clockCollection = NULL;
+    CALL(FMICalloc((void**)&clockCollection, 1, sizeof(ClockCollection)));
+    clockCollection->count = getClocksCount(modelDescription->modelVariables, modelDescription->nModelVariables);
+    
+    CALL(FMICalloc((void**)&clockCollection->clocks, clockCollection->count, sizeof(Clock)));
+    extractClocksFromModelVariables(modelDescription->modelVariables, modelDescription->nModelVariables, clockCollection);
+
+    //startTime = getPerformanceCounter();
+    QueryPerformanceFrequency(&frequency);
+    QueryPerformanceCounter(&startTime);
 
     if (settings->recordIntermediateValues) {
 
@@ -98,6 +166,7 @@ FMIStatus simulateFMI3CS(FMIInstance* S,
     if (!settings->initialFMUStateFile) {
 
         CALL(FMI3EnterInitializationMode(S, settings->tolerance > 0, settings->tolerance, settings->startTime, fmi3False, 0));
+        CALL(initializeClockArray(S, clockCollection, settings->startTime));
         CALL(FMI3ExitInitializationMode(S));
 
         if (settings->eventModeUsed) {
@@ -242,6 +311,12 @@ TERMINATE:
     if (status != FMIFatal) {
         FMI3FreeInstance(S);
     }
+
+    //endTime = getPerformanceCounter();
+    QueryPerformanceCounter(&endTime);
+    //printf("Execution Time: %f seconds\n", getCounterDifferenceInSeconds(startTime, endTime));
+    printf("Execution Time: %f seconds\n", (double)(endTime.QuadPart - startTime.QuadPart) / frequency.QuadPart);
+    printMemoryUsage();
 
     return status;
 }

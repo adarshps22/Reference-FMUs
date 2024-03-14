@@ -208,6 +208,7 @@ Status getClock(ModelInstance* comp, ValueReference vr, bool* value);
 Status setClock(ModelInstance* comp, ValueReference vr, const bool* value);
 
 Status getInterval(ModelInstance* comp, ValueReference vr, double* interval, int* qualifier);
+Status getShift(ModelInstance* comp, ValueReference vr, double* shift);
 
 Status activateModelPartition(ModelInstance* comp, ValueReference vr, double activationTime);
 

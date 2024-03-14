@@ -169,7 +169,12 @@ END_FUNCTION()
 #define MASK_fmi3GetIntervalFraction       MASK_AnyState
 #define MASK_fmi3SetIntervalDecimal        MASK_AnyState
 #define MASK_fmi3SetIntervalFraction       MASK_AnyState
+#define MASK_fmi3GetShiftDecimal           MASK_AnyState
+#define MASK_fmi3GetShiftFraction          MASK_AnyState
+#define MASK_fmi3SetShiftDecimal           MASK_AnyState
+#define MASK_fmi3SetShiftFraction          MASK_AnyState
 #define MASK_fmi3NewDiscreteStates         MASK_AnyState
+
 
 /* Functions for Model Exchange */
 
@@ -970,11 +975,16 @@ fmi3Status fmi3GetShiftDecimal(fmi3Instance instance,
     size_t nValueReferences,
     fmi3Float64 shifts[]) {
 
-    UNUSED(valueReferences);
-    UNUSED(nValueReferences);
-    UNUSED(shifts);
+    BEGIN_FUNCTION(GetShiftDecimal);
 
-    NOT_IMPLEMENTED;
+    for (size_t i = 0; i < nValueReferences; i++) {
+        //UNUSED(valueReferences);
+        //UNUSED(nValueReferences);
+        //UNUSED(shifts);
+        CALL(getShift(instance, (ValueReference)valueReferences[i], &shifts[i]));
+    }
+
+    END_FUNCTION();
 }
 
 fmi3Status fmi3GetShiftFraction(fmi3Instance instance,

@@ -51,6 +51,8 @@ set(sources
   FMIRecorder.c
   FMIZip.h
   FMIZip.c
+  FMI3Clock.h
+  FMI3Clock.c
   fmi1schema.h
   fmi2schema.h
   fmi3schema.h

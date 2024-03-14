@@ -611,6 +611,51 @@ static FMIModelDescription* readModelDescriptionFMI3(xmlNodePtr root) {
             }
         }
 
+        if (variable->type == FMIClockType) {
+            CALL(FMICalloc((void**)&variable->clockProperties, 1, sizeof(FMIClockProperties)));
+            const char* intervalVariability = (char*)xmlGetProp(variableNode, (xmlChar*)"intervalVariability");
+
+            if (!strcmp(intervalVariability, "constant")) {
+                variable->clockProperties->intervalVariability = FMIIVConstant;
+            }
+            else if (!strcmp(intervalVariability, "fixed")) {
+                variable->clockProperties->intervalVariability = FMIIVFixed;
+            }
+            else if (!strcmp(intervalVariability, "tunable")) {
+                variable->clockProperties->intervalVariability = FMIIVTunable;
+            }
+            else if (!strcmp(intervalVariability, "constant")) {
+                variable->clockProperties->intervalVariability = FMIIVConstant;
+            }
+            else if (!strcmp(intervalVariability, "changing")) {
+                variable->clockProperties->intervalVariability = FMIIVChanging;
+            }
+            else {
+            variable->clockProperties->intervalVariability = FMIIVTriggered;
+            }
+
+            variable->clockProperties->intervalDecimal = (char*)xmlGetProp(variableNode, (xmlChar*)"intervalDecimal");
+            if (variable->clockProperties->intervalDecimal != NULL) {
+                variable->clockProperties->shiftDecimal = (char*)xmlGetProp(variableNode, (xmlChar*)"shiftDecimal");
+                if (variable->clockProperties->shiftDecimal == NULL) {
+                    variable->clockProperties->shiftDecimal = "0.0";
+                }
+            }
+            
+            variable->clockProperties->supportsFraction = (char*)xmlGetProp(variableNode, (xmlChar*)"supportsFraction");
+            variable->clockProperties->resolution = (char*)xmlGetProp(variableNode, (xmlChar*)"resolution");
+            
+            variable->clockProperties->intervalCounter = (char*)xmlGetProp(variableNode, (xmlChar*)"intervalCounter");
+            if (variable->clockProperties->intervalCounter == NULL) {
+                variable->clockProperties->shiftCounter = (char*)xmlGetProp(variableNode, (xmlChar*)"shiftCounter");
+                if (variable->clockProperties->shiftCounter) {
+                    variable->clockProperties->shiftCounter = "0";
+                }
+            }
+
+            free((void*)intervalVariability);
+        }
+
         const char* vr = (char*)xmlGetProp(variableNode, (xmlChar*)"valueReference");
 
         variable->valueReference = FMIValueReferenceForLiteral(vr);

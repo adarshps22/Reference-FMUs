@@ -24,9 +24,20 @@ typedef enum {
     FMIFixed, 
     FMITunable, 
     FMIDiscrete, 
-    FMIContinuous
+    FMIContinuous,
 
 } FMIVariability;
+
+typedef enum {
+
+    FMIIVConstant,
+    FMIIVFixed,
+    FMIIVTunable,
+    FMIIVChanging,
+    FMIIVCountdown,
+    FMIIVTriggered
+
+} FMIIntervalVariability;
 
 typedef enum {
 
@@ -48,6 +59,8 @@ typedef struct FMIDimension FMIDimension;
 
 typedef struct FMIModelVariable FMIModelVariable;
 
+typedef struct FMIClockProperties FMIClockProperties;
+
 struct FMIModelVariable {
     
     FMIVariableType type;
@@ -62,7 +75,17 @@ struct FMIModelVariable {
     FMIDimension* dimensions;
     FMIModelVariable* derivative;
     unsigned short line;
+    FMIClockProperties* clockProperties;
+};
 
+struct FMIClockProperties{
+    FMIIntervalVariability intervalVariability;
+    const char* intervalDecimal;
+    const char* shiftDecimal;
+    const char* supportsFraction;
+    const char* resolution;
+    const char* intervalCounter;
+    const char* shiftCounter;
 };
 
 struct FMIDimension{

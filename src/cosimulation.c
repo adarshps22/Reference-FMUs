@@ -516,6 +516,15 @@ Status getInterval(ModelInstance* comp, ValueReference vr, double* interval, int
 }
 #endif
 
+#ifndef GET_SHIFT
+Status getShift(ModelInstance* comp, ValueReference vr, double* shift) {
+    UNUSED(comp);
+    UNUSED(vr);
+    UNUSED(shift);
+    return Error;
+}
+#endif
+
 #ifndef ACTIVATE_MODEL_PARTITION
 Status activateModelPartition(ModelInstance* comp, ValueReference vr, double activationTime) {
     UNUSED(comp);
