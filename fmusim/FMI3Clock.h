@@ -29,7 +29,7 @@ typedef struct {
 
 // Calculates the local synchronization point for clocks
 // Takes time, mode step, and an array of Clock structures along with their count
-double calculateLocalSyncPoint(double currentTime, double modelStep, ClockCollection* clocks);
+FMIStatus calculateLocalSyncPoint(double currentTime, double modelStep, ClockCollection* clockCollection, double* newStep);
 
 // Initializes an array of Clock structures
 // Takes an array of Clocks and their count to perform initialization
@@ -38,7 +38,7 @@ FMIStatus initializeClockArray(FMIInstance* instance, ClockCollection* clockColl
 // Updates clocks in event mode
 // This function should update all clocks as per the event mode logic
 // Specific implementation details to be added based on requirements
-FMIStatus updateClocksForEventMode(ClockCollection* clockCollection);
+FMIStatus updateClocksForEventMode(FMIInstance* instance, ClockCollection* clockCollection, double time);
 
 // Retrieves the next clock event time
 // Returns the time for the next clock event based on the clocks array

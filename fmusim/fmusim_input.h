@@ -1,7 +1,7 @@
 #pragma once
 
 #include "FMIModelDescription.h"
-
+#include "FMI3Clock.h"
 
 typedef struct {
 	
@@ -25,3 +25,5 @@ void FMIFreeInput(FMUStaticInput* input);
 double FMINextInputEvent(const FMUStaticInput* input, double time);
 
 FMIStatus FMIApplyInput(FMIInstance* instance, const FMUStaticInput* input, double time, bool discrete, bool continuous, bool afterEvent);
+
+FMIStatus FMIActivateClocks(FMIInstance* instance, ClockCollection* clockCollection);

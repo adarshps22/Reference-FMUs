@@ -3,11 +3,15 @@
 #include "config.h"
 #include "model.h"
 
+#define A 1.0               // Amplitude
+#define f 0.2               // Frequency in Hz
+#define omega 2 * 3.14 * f  // Angular frequency
 
 void setStartValues(ModelInstance *comp) {
-    M(counter) = 1;
-	M(step) = 1;
-    M(inClock1Interval) = 1.0;
+    M(counter) = 0;
+	M(sine) = 0.0;
+    M(cosine) = A;
+    M(inClock1Interval) = 0.1;
     M(inClock1Shift) = 0.0;
 }
 
@@ -19,28 +23,28 @@ Status calculateValues(ModelInstance *comp) {
 Status getContinuousStates(ModelInstance* comp, double x[], size_t nx) {
 
     UNUSED(nx);
+    x[0] = M(cosine);
+    x[1] = -M(sine);
 
-    M(step) += 1;
-    x[0] = M(step);
     return OK;
 }
 
 Status setContinuousStates(ModelInstance* comp, const double x[], size_t nx) {
-    UNUSED(comp);
     UNUSED(nx);
-    UNUSED(x);
+    M(sine) = x[0];
+    M(cosine) = x[1];
     return OK;
 }
 
 size_t getNumberOfContinuousStates(ModelInstance* comp) {
     UNUSED(comp);
-    return 1;
+    return 2;
 }
 
 Status getDerivatives(ModelInstance* comp, double dx[], size_t nx) {
-    UNUSED(comp);
-    UNUSED(dx);
     UNUSED(nx);
+    dx[0] = -omega * M(sine);
+    dx[1] = -omega * M(cosine);
     return OK;
 }
 
@@ -52,8 +56,13 @@ Status getFloat64(ModelInstance* comp, ValueReference vr, double values[], size_
     case vr_time:
         values[(*index)++] = comp->time;
         return OK;
-    case vr_step:
-        values[(*index)++] = M(step);
+    case vr_der_cosine:
+    case vr_sine:
+        values[(*index)++] = M(sine);
+        return OK;
+    case vr_der_sine:
+    case vr_cosine:
+        values[(*index)++] = M(cosine);
         return OK;
     default:
         logError(comp, "Get Float64 is not allowed for value reference %u.", vr);
@@ -87,10 +96,11 @@ Status getClock(ModelInstance* comp, ValueReference vr, _Bool* value) {
     }
 }
 
-Status setClock(ModelInstance* comp, ValueReference vr, const _Bool* value) {
+Status activateClock(ModelInstance* comp, ValueReference vr) {
+
     switch (vr) {
     case vr_inClock1:
-        M(inClock1) = *value;
+        M(inClock1) = true;
         return OK;
     default:
         logError(comp, "Get Clock is not allowed for value reference %u.", vr);
@@ -130,7 +140,7 @@ Status eventUpdate(ModelInstance *comp) {
 
     comp->valuesOfContinuousStatesChanged   = false;
     comp->nominalsOfContinuousStatesChanged = false;
-    comp->terminateSimulation               = M(counter) >= 10;
+    comp->terminateSimulation               = false;
     comp->nextEventTimeDefined              = false;
 
     return OK;

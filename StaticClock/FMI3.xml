@@ -29,14 +29,18 @@
 
   <ModelVariables>
     <Float64 name="time" valueReference="0" causality="independent" variability="continuous" description="Simulation time"/>
-    <Float64 name="step" valueReference="1" causality="output" variability="continuous" initial="exact" start="1"/>
-	  <Int32 name="counter" valueReference="2" description="increment for every event" causality="output" variability="discrete" initial="exact" start="1"/>
-	  <Clock name="inClock1" valueReference="1001" causality="input" intervalVariability="constant" intervalDecimal="1.0" priority="0"/>
+    <Float64 name="sine" valueReference="1" causality="output" variability="continuous" initial="exact" start="0"/>
+    <Float64 name="der(sine)" valueReference="2" causality="local" variability="continuous" initial="calculated" declaredType="Velocity" derivative="1" description="Derivative of sine"/>
+    <Float64 name="cosine" valueReference="3" causality="output" variability="continuous" initial="exact" start="1"/>
+    <Float64 name="der(cosine)" valueReference="4" causality="local" variability="continuous" initial="calculated" declaredType="Velocity" derivative="3" description="Derivative of cosine"/>
+	  <Int32 name="counter" valueReference="5" description="increment for every event" causality="output" variability="discrete" initial="exact" start="0"/>
+	  <Clock name="inClock1" valueReference="1001" causality="input" intervalVariability="constant" intervalDecimal="0.1" priority="0"/>
   </ModelVariables>
 
   <ModelStructure>
     <Output valueReference="1"/>
-    <Output valueReference="2"/>
+    <Output valueReference="3"/>
+    <Output valueReference="5"/>
   </ModelStructure>
 
 </fmiModelDescription>

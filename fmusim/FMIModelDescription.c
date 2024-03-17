@@ -624,8 +624,8 @@ static FMIModelDescription* readModelDescriptionFMI3(xmlNodePtr root) {
             else if (!strcmp(intervalVariability, "tunable")) {
                 variable->clockProperties->intervalVariability = FMIIVTunable;
             }
-            else if (!strcmp(intervalVariability, "constant")) {
-                variable->clockProperties->intervalVariability = FMIIVConstant;
+            else if (!strcmp(intervalVariability, "countdown")) {
+                variable->clockProperties->intervalVariability = FMIIVCountdown;
             }
             else if (!strcmp(intervalVariability, "changing")) {
                 variable->clockProperties->intervalVariability = FMIIVChanging;

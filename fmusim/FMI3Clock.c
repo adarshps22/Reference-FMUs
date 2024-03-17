@@ -1,5 +1,6 @@
 #include "FMI3Clock.h"
 #include "FMI3.h"
+#include <math.h>
 
 #define CALL(f) do { FMIStatus status = f; if (status != FMIOK) return status; } while (false)
 
@@ -14,15 +15,17 @@ unsigned long long gcd(unsigned long long a, unsigned long long b) {
 }
 
 // Function to calculate local synchronization point
-double calculateLocalSyncPoint(double currentTime, double modelStep, ClockCollection* clockCollection) {
-    unsigned long long hcf = gcd((unsigned long long)(currentTime * 1000000), (unsigned long long)(modelStep * 1000000));
+FMIStatus calculateLocalSyncPoint(double currentTime, double modelStep, ClockCollection* clockCollection, double* newStep) {
+    unsigned long long hcf = gcd((unsigned long long)round(currentTime * 1000000), (unsigned long long)round(modelStep * 1000000));
     for (size_t i = 0; i < clockCollection->count; ++i) {
         if (clockCollection->clocks[i].intervalVariability != FMIIVTriggered) {
-            hcf = gcd(hcf, (unsigned long long)(clockCollection->clocks[i].nextTick * 1000000));
+            hcf = gcd(hcf, (unsigned long long)round(clockCollection->clocks[i].nextTick * 1000000));
         }
     }
-    double syncPoint = ((double)hcf) / 1000000;
-    return syncPoint;
+    clockCollection->modelNextEventTime = currentTime + ((double)hcf) / 1000000;
+    *newStep = ((double)hcf) / 1000000;
+
+    return FMIOK;
 }
 
 FMIStatus initializeClockArray(FMIInstance* instance, ClockCollection* clockCollection, double startTime) {
@@ -51,7 +54,7 @@ FMIStatus initializeClockArray(FMIInstance* instance, ClockCollection* clockColl
 // Updates clocks in event mode
 // This function should update all clocks as per the event mode logic
 // Specific implementation details to be added based on requirements
-FMIStatus updateClocksForEventMode(ClockCollection* clockCollection, double time) {
+FMIStatus updateClocksForEventMode(FMIInstance* instance, ClockCollection* clockCollection, double time) {
     for (size_t i = 0; i < clockCollection->count; ++i) {
         if (clockCollection->clocks[i].intervalVariability == FMIIVConstant) {
             if (fabs(time - clockCollection->clocks[i].nextTick) < 0.0000001) {

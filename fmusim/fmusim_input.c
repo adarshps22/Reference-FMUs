@@ -7,7 +7,6 @@
 #include "FMIUtil.h"
 #include "fmusim_input.h"
 
-
 #define CALL(f) do { status = f; if (status > FMIOK) goto TERMINATE; } while (0)
 
 
@@ -218,6 +217,23 @@ double FMINextInputEvent(const FMUStaticInput* input, double time) {
 	}
 
 	return INFINITY;
+}
+
+FMIStatus FMIActivateClocks(FMIInstance* instance, ClockCollection* clockCollection) {
+	FMIStatus status = FMIOK;
+
+	for (int i = 0; i < clockCollection->count; i++) {
+		bool firstTick = fabs(clockCollection->modelNextEventTime - clockCollection->clocks[i].nextTick) < 10e-6;
+		if (firstTick || fabs(fmod(clockCollection->modelNextEventTime, clockCollection->clocks[i].nextTick)) < 10e-6) {
+			const fmi3ValueReference valueReferences[1] = { clockCollection->clocks[i].valueReference };
+			const fmi3Clock values[1] = { fmi3True };
+			CALL(FMI3SetClock(instance, valueReferences, 1, values));
+		}
+	}
+
+TERMINATE:
+
+	return status;
 }
 
 FMIStatus FMIApplyInput(FMIInstance* instance, const FMUStaticInput* input, double time, bool discrete, bool continuous, bool afterEvent) {
