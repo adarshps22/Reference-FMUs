@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <fmiModelDescription
   fmiVersion="3.0"
-  modelName="StaticClock"
+  modelName="ConstantClock"
   generationTool="Reference FMUs (development build)"
   instantiationToken="{1EDAAE1A-3FAB-48A3-BACE-B6C2782583E6}">
 
   <ModelExchange
-    modelIdentifier="StaticClock"
+    modelIdentifier="ConstantClock"
     canGetAndSetFMUState="true"
     canSerializeFMUState="true"/>
 
   <CoSimulation
-    modelIdentifier="StaticClock"
+    modelIdentifier="ConstantClock"
     canGetAndSetFMUState="true"
     canSerializeFMUState="true"
     canHandleVariableCommunicationStepSize="true"

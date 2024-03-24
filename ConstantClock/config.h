@@ -2,7 +2,7 @@
 #define config_h
 
 // define class name and unique id
-#define MODEL_IDENTIFIER StaticClock
+#define MODEL_IDENTIFIER ConstantClock
 #define INSTANTIATION_TOKEN "{1EDAAE1A-3FAB-48A3-BACE-B6C2782583E6}"
 
 #define CO_SIMULATION
