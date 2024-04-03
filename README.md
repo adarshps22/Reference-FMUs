@@ -9,6 +9,7 @@ A set of hand-coded FMUs for development, testing and debugging of the [Function
 - [Stair](Stair) - a counter with time events
 - [StateSpace](StateSpace) - arrays and structural parameters
 - [VanDerPol](VanDerPol) - Van der Pol test equation
+- [ConstantClock](ConstantClock) - Constant Clock FMI 3.0
 
 Use the [fmusim](fmusim) executable to simulate an FMU:
 
